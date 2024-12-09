@@ -25,4 +25,3 @@ WORKDIR /ros2_ws
 
 # Set the entrypoint to bash
 ENTRYPOINT ["/bin/bash"]
-CMD ["bash"]
