@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="payload-sdk-ros2" exec="psdk_wrapper_node" name="psdk_wrapper_node" output="screen">
+        <!-- Add your parameters and remappings here -->
+    </node>
+</launch>

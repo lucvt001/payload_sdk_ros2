@@ -76,8 +76,11 @@ Application::Application(int argc, char **argv)
     Osal_TaskSleepMs(3000);
 }
 
-Application::~Application()
-= default;
+Application::~Application() {
+    std::cout << "Deinitializing DJI Core" << std::endl;
+    DjiCore_DeInit();
+    std::cout << "Deinitializing DJI Core done!" << std::endl;
+}
 
 /* Private functions definition-----------------------------------------------*/
 void Application::DjiUser_SetupEnvironment(int argc, char **argv)

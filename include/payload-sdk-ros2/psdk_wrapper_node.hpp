@@ -13,8 +13,8 @@ public:
     ~PSDKWrapper();
 
 private:
-    bool is_enable_liveview_ = false;
-    bool is_enable_flight_control_ = false;
+    bool is_enable_liveview_ = true;
+    bool is_enable_flight_control_ = true;
 
     LiveViewWrapper *liveview_wrapper_;
 };

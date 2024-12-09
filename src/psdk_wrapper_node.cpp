@@ -4,6 +4,7 @@
 PSDKWrapper::PSDKWrapper() : Node("psdk_wrapper_node")
 {
     if (is_enable_liveview_) {
+        RCLCPP_INFO(get_logger(), "Enabling Liveview");
         liveview_wrapper_ = new LiveViewWrapper(shared_from_this());
         RCLCPP_INFO(get_logger(), "Liveview enabled");
     }
