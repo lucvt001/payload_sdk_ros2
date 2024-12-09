@@ -9,6 +9,10 @@ RUN apt-get update && apt-get upgrade -y && \
     vim \
     net-tools \
     iproute2 \
+    iputils-ping \
+    python3-pip \
+    python3-argcomplete \
+    && apt-get remove -y ros-humble-compressed-depth-image-transport ros-humble-theora-image-transport \
     && rm -rf /var/lib/apt/lists/*
 
 # Add ROS setup to .bashrc
