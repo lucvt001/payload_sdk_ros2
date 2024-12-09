@@ -1,6 +1,6 @@
 #include <payload-sdk-ros2/liveview.hpp>
 
-LiveViewWrapper::LiveViewWrapper(const rclcpp::Node::SharedPtr& node)
+LiveViewWrapper::LiveViewWrapper(std::shared_ptr<rclcpp::Node> node)
     : node_(node)
 {
     // --------------------------------------------------------------
@@ -8,7 +8,7 @@ LiveViewWrapper::LiveViewWrapper(const rclcpp::Node::SharedPtr& node)
     try {
         liveviewSample = new LiveviewSample();
     } catch (...) {
-        std::cerr << "Failed to initialize LiveviewSample" << std::endl;
+        RCLCPP_ERROR(node_->get_logger(), "Failed to initialize LiveviewSample");
         exit(1);
     }
     // --------------------------------------------------------------
@@ -17,17 +17,17 @@ LiveViewWrapper::LiveViewWrapper(const rclcpp::Node::SharedPtr& node)
     node_->get_parameter("camera_index", camera_index_);
 
     switch (camera_index_) {
-        case '0':
-            liveviewSample->StartFpvCameraStream(&DjiUser_ShowRgbImageCallback, &fpvName);
+        case 0:
+            liveviewSample->StartFpvCameraStream(&DjiUser_ShowRgbImageCallback, this);
             break;
-        case '1':
-            liveviewSample->StartMainCameraStream(&DjiUser_ShowRgbImageCallback, &mainName);
+        case 1:
+            liveviewSample->StartMainCameraStream(&DjiUser_ShowRgbImageCallback, this);
             break;
-        case '2':
-            liveviewSample->StartViceCameraStream(&DjiUser_ShowRgbImageCallback, &viceName);
+        case 2:
+            liveviewSample->StartViceCameraStream(&DjiUser_ShowRgbImageCallback, this);
             break;
-        case '3':
-            liveviewSample->StartTopCameraStream(&DjiUser_ShowRgbImageCallback, &topName);
+        case 3:
+            liveviewSample->StartTopCameraStream(&DjiUser_ShowRgbImageCallback, this);
             break;
         default:
             cout << "Camera index must be 0 (FPV), 1 (Main), 2 (Vice), or 3 (Top)";
@@ -42,13 +42,24 @@ LiveViewWrapper::LiveViewWrapper(const rclcpp::Node::SharedPtr& node)
 void LiveViewWrapper::DjiUser_ShowRgbImageCallback(CameraRGBImage img, void *userData)
 {
     LiveViewWrapper* live_view_wrapper = static_cast<LiveViewWrapper*>(userData);
-    std::string name = string(reinterpret_cast<char *>(userData));
+
     cv::Mat mat(img.height, img.width, CV_8UC3, img.rawData.data(), img.width * 3);
     cv::cvtColor(mat, mat, cv::COLOR_RGB2BGR);
-    cv::imshow(name, mat);
+    // cv::imshow("a", mat);
+    // cv::waitKey(5);
 
-    sensor_msgs::msg::Image::SharedPtr image = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", mat).toImageMsg();
-    live_view_wrapper->image_pub_.publish(image);
+    live_view_wrapper->publishImage(mat);
+}
+
+void LiveViewWrapper::publishImage(cv::Mat &mat)
+{
+    try {
+        sensor_msgs::msg::Image::SharedPtr image = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", mat).toImageMsg();
+        image->header.frame_id = "base_link";
+        image_pub_.publish(image);
+    } catch (...) {
+        std::cerr << "Failed to publish image" << std::endl;
+    }
 }
 
 LiveViewWrapper::~LiveViewWrapper()
@@ -72,4 +83,5 @@ LiveViewWrapper::~LiveViewWrapper()
     }
 
     delete liveviewSample;
+    std::cout << "LiveviewSample deleted" << std::endl;
 }

@@ -15,11 +15,11 @@
 class LiveViewWrapper
 {
 public:
-    LiveViewWrapper(const rclcpp::Node::SharedPtr& node);
+    explicit LiveViewWrapper(std::shared_ptr<rclcpp::Node> node);
     ~LiveViewWrapper();
 
 private:
-    rclcpp::Node::SharedPtr node_;
+    std::shared_ptr<rclcpp::Node> node_;
     image_transport::Publisher image_pub_;
     int camera_index_;
 
@@ -29,6 +29,7 @@ private:
     char topName[8] = "TOP_CAM";
 
     static void DjiUser_ShowRgbImageCallback(CameraRGBImage img, void *userData);
+    void publishImage(cv::Mat &mat);
 
     LiveviewSample *liveviewSample;
 };

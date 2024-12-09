@@ -3,9 +3,13 @@
 
 PSDKWrapper::PSDKWrapper() : Node("psdk_wrapper_node")
 {
+    // Placeholder for now
+}
+
+void PSDKWrapper::initialize()
+{
     if (is_enable_liveview_) {
-        RCLCPP_INFO(get_logger(), "Enabling Liveview");
-        liveview_wrapper_ = new LiveViewWrapper(shared_from_this());
+        liveview_wrapper_ = std::make_unique<LiveViewWrapper>(this->shared_from_this());
         RCLCPP_INFO(get_logger(), "Liveview enabled");
     }
 }
@@ -23,6 +27,7 @@ int main(int argc, char **argv)
     // Other components of DJI will be initialized inside the node
     rclcpp::init(argc, argv);
     auto psdk_wrapper = std::make_shared<PSDKWrapper>();
+    psdk_wrapper->initialize();
 
     rclcpp::spin(psdk_wrapper);
     rclcpp::shutdown();

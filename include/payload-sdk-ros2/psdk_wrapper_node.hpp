@@ -12,11 +12,14 @@ public:
     PSDKWrapper();
     ~PSDKWrapper();
 
+    // initialize has to be a separate function to avoid "bad_weak_ptr" error when passing the node to LiveViewWrapper
+    void initialize();
+
 private:
     bool is_enable_liveview_ = true;
     bool is_enable_flight_control_ = true;
 
-    LiveViewWrapper *liveview_wrapper_;
+    std::unique_ptr<LiveViewWrapper> liveview_wrapper_;
 };
 
 #endif // PSDK_WRAPPER_HPP
