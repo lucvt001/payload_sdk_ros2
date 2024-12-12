@@ -3,8 +3,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <string>
-#include <payload-sdk-ros2/application.hpp>
-#include <payload-sdk-ros2/liveview.hpp>
+#include <payload_sdk_ros2/application.hpp>
+#include <payload_sdk_ros2/liveview.hpp>
 
 class PSDKWrapper : public rclcpp::Node
 {

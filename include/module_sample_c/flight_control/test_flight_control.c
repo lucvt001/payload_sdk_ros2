@@ -23,16 +23,9 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "dji_flight_controller.h"
-#include "test_flight_control.h"
-#include "dji_fc_subscription.h"
-#include "dji_platform.h"
-#include "dji_logger.h"
-#include <math.h>
-#include <widget_interaction_test/test_widget_interaction.h>
-#include <dji_aircraft_info.h>
-/* Private constants ---------------------------------------------------------*/
 
+/* Private constants ---------------------------------------------------------*/
+#include "test_flight_control.h"
 /* Private types -------------------------------------------------------------*/
 typedef struct {
     E_DjiFcSubscriptionDisplayMode displayMode;
@@ -59,39 +52,6 @@ static const T_DjiTestFlightControlDisplayModeStr s_flightControlDisplayModeStr[
 };
 
 /* Private functions declaration ---------------------------------------------*/
-static uint8_t DjiTest_FlightControlGetDisplayModeIndex(E_DjiFcSubscriptionDisplayMode displayMode);
-static T_DjiFcSubscriptionFlightStatus DjiTest_FlightControlGetValueOfFlightStatus(void);
-static T_DjiFcSubscriptionDisplaymode DjiTest_FlightControlGetValueOfDisplayMode(void);
-static T_DjiFcSubscriptionHeightFusion DjiTest_FlightControlGetValueOfHeightFusion(void);
-static T_DjiFcSubscriptionQuaternion DjiTest_FlightControlGetValueOfQuaternion(void);
-static T_DjiFcSubscriptionPositionFused DjiTest_FlightControlGetValueOfPositionFused(void);
-static dji_f32_t DjiTest_FlightControlGetValueOfRelativeHeight(void);
-static bool DjiTest_FlightControlMotorStartedCheck(void);
-static bool DjiTest_FlightControlTakeOffInAirCheck(void);
-static bool DjiTest_FlightControlLandFinishedCheck(void);
-static bool DjiTest_FlightControlMonitoredTakeoff(void);
-static bool DjiTest_FlightControlCheckActionStarted(E_DjiFcSubscriptionDisplayMode mode);
-static bool DjiTest_FlightControlMonitoredLanding(void);
-static bool DjiTest_FlightControlGoHomeAndConfirmLanding(void);
-static T_DjiTestFlightControlVector3f DjiTest_FlightControlQuaternionToEulerAngle(T_DjiFcSubscriptionQuaternion quat);
-static T_DjiTestFlightControlVector3f
-DjiTest_FlightControlLocalOffsetFromGpsAndFusedHeightOffset(T_DjiFcSubscriptionPositionFused target,
-                                                            T_DjiFcSubscriptionPositionFused origin,
-                                                            dji_f32_t targetHeight,
-                                                            dji_f32_t originHeight);
-static T_DjiTestFlightControlVector3f
-DjiTest_FlightControlVector3FSub(T_DjiTestFlightControlVector3f vectorA, T_DjiTestFlightControlVector3f vectorB);
-static int DjiTest_FlightControlSignOfData(dji_f32_t data);
-static void DjiTest_FlightControlHorizCommandLimit(dji_f32_t speedFactor, dji_f32_t *commandX, dji_f32_t *commandY);
-static dji_f32_t DjiTest_FlightControlVectorNorm(T_DjiTestFlightControlVector3f v);
-static T_DjiReturnCode
-DjiTest_FlightControlJoystickCtrlAuthSwitchEventCallback(T_DjiFlightControllerJoystickCtrlAuthorityEventInfo eventData);
-static bool DjiTest_FlightControlMoveByPositionOffset(T_DjiTestFlightControlVector3f offsetDesired,
-                                                      float yawDesiredInDeg,
-                                                      float posThresholdInM,
-                                                      float yawThresholdInDeg);
-static T_DjiReturnCode DjiTest_FlightControlInit(void);
-static T_DjiReturnCode DjiTest_FlightControlDeInit(void);
 static void DjiTest_FlightControlTakeOffLandingSample(void);
 static void DjiTest_FlightControlPositionControlSample(void);
 static void DjiTest_FlightControlGoHomeForceLandingSample(void);

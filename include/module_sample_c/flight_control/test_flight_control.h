@@ -29,6 +29,13 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "dji_typedef.h"
+#include "dji_flight_controller.h"
+#include "dji_fc_subscription.h"
+#include "dji_platform.h"
+#include "dji_logger.h"
+#include <math.h>
+#include <widget/test_widget.h>
+#include <dji_aircraft_info.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,6 +66,41 @@ typedef struct {
 T_DjiReturnCode DjiTest_FlightControlRunSample(E_DjiTestFlightCtrlSampleSelect flightCtrlSampleSelect);
 void DjiTest_FlightControlVelocityAndYawRateCtrl(const T_DjiTestFlightControlVector3f offsetDesired, float yawRate,
                                                  uint32_t timeMs);
+
+uint8_t DjiTest_FlightControlGetDisplayModeIndex(E_DjiFcSubscriptionDisplayMode displayMode);
+T_DjiFcSubscriptionFlightStatus DjiTest_FlightControlGetValueOfFlightStatus(void);
+T_DjiFcSubscriptionDisplaymode DjiTest_FlightControlGetValueOfDisplayMode(void);
+T_DjiFcSubscriptionHeightFusion DjiTest_FlightControlGetValueOfHeightFusion(void);
+T_DjiFcSubscriptionQuaternion DjiTest_FlightControlGetValueOfQuaternion(void);
+T_DjiFcSubscriptionPositionFused DjiTest_FlightControlGetValueOfPositionFused(void);
+dji_f32_t DjiTest_FlightControlGetValueOfRelativeHeight(void);
+bool DjiTest_FlightControlMotorStartedCheck(void);
+bool DjiTest_FlightControlTakeOffInAirCheck(void);
+bool DjiTest_FlightControlLandFinishedCheck(void);
+bool DjiTest_FlightControlMonitoredTakeoff(void);
+bool DjiTest_FlightControlCheckActionStarted(E_DjiFcSubscriptionDisplayMode mode);
+bool DjiTest_FlightControlMonitoredLanding(void);
+bool DjiTest_FlightControlGoHomeAndConfirmLanding(void);
+T_DjiTestFlightControlVector3f DjiTest_FlightControlQuaternionToEulerAngle(T_DjiFcSubscriptionQuaternion quat);
+T_DjiTestFlightControlVector3f
+    DjiTest_FlightControlLocalOffsetFromGpsAndFusedHeightOffset(T_DjiFcSubscriptionPositionFused target,
+                                                            T_DjiFcSubscriptionPositionFused origin,
+                                                            dji_f32_t targetHeight,
+                                                            dji_f32_t originHeight);
+T_DjiTestFlightControlVector3f
+    DjiTest_FlightControlVector3FSub(T_DjiTestFlightControlVector3f vectorA, T_DjiTestFlightControlVector3f vectorB);
+int DjiTest_FlightControlSignOfData(dji_f32_t data);
+void DjiTest_FlightControlHorizCommandLimit(dji_f32_t speedFactor, dji_f32_t *commandX, dji_f32_t *commandY);
+dji_f32_t DjiTest_FlightControlVectorNorm(T_DjiTestFlightControlVector3f v);
+T_DjiReturnCode
+    DjiTest_FlightControlJoystickCtrlAuthSwitchEventCallback(T_DjiFlightControllerJoystickCtrlAuthorityEventInfo eventData);
+bool DjiTest_FlightControlMoveByPositionOffset(T_DjiTestFlightControlVector3f offsetDesired,
+                                                      float yawDesiredInDeg,
+                                                      float posThresholdInM,
+                                                      float yawThresholdInDeg);
+                                                 
+T_DjiReturnCode DjiTest_FlightControlInit(void);
+T_DjiReturnCode DjiTest_FlightControlDeInit(void);
 
 #ifdef __cplusplus
 }

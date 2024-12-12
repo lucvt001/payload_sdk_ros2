@@ -1,4 +1,4 @@
-#include <payload-sdk-ros2/liveview.hpp>
+#include <payload_sdk_ros2/liveview.hpp>
 
 LiveViewWrapper::LiveViewWrapper(std::shared_ptr<rclcpp::Node> node)
     : node_(node)

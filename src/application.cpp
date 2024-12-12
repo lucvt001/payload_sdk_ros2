@@ -23,9 +23,9 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include <payload-sdk-ros2/application.hpp>
-#include <payload-sdk-ros2/dji_sdk_app_info.h>
-#include <payload-sdk-ros2/dji_sdk_config.h>
+#include <payload_sdk_ros2/application.hpp>
+#include <payload_sdk_ros2/dji_sdk_app_info.h>
+#include <payload_sdk_ros2/dji_sdk_config.h>
 #include <dji_platform.h>
 #include <dji_logger.h>
 #include <dji_core.h>

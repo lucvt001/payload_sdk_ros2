@@ -1,4 +1,4 @@
-#include <payload-sdk-ros2/psdk_wrapper_node.hpp>
+#include <payload_sdk_ros2/psdk_wrapper_node.hpp>
 #include <cstring>
 
 PSDKWrapper::PSDKWrapper() : Node("psdk_wrapper_node")

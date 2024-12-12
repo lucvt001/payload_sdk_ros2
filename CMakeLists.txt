@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
-project(payload-sdk-ros2)
+project(payload_sdk_ros2)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -w)
 endif()
 
 set(USE_SYSTEM_ARCH LINUX)
@@ -19,6 +19,12 @@ find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(OpenCV REQUIRED)
 
+find_package(payload_sdk_ros2_interfaces REQUIRED)
+
+find_package(rclcpp_action REQUIRED)
+find_package(rclcpp_components REQUIRED)
+
+
 # Add path to FindFFMPEG.cmake and FindLIBUSB.cmake files
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include/common/3rdparty)
 
@@ -28,8 +34,8 @@ find_package(LIBUSB REQUIRED)
 set(DJI_OSAL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include/common/osal)
 set(DJI_HAL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include/hal)
 set(DJI_STREAMING_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include/module_sample_cpp/liveview)
-set(DJI_UTILS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include/module_sample_c/utils)
 set(DJI_HMS_RETURN_CODES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include/module_sample_c/hms/data)
+set(DJI_MODULE_SAMPLE_C_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include/module_sample_c)
 
 # Find toolchain name needed to select the right PSDK lib
 execute_process(COMMAND uname -m
@@ -91,20 +97,11 @@ if (NOT EXECUTABLE_OUTPUT_PATH)
     set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 endif ()
 
-# Include PSDK header files
-# include_directories(${FFMPEG_INCLUDE_DIR})
-# include_directories(${DJI_OSAL_PATH})
-# include_directories(${DJI_HAL_PATH})
-# include_directories(${DJI_STREAMING_PATH})
-# include_directories(${DJI_UTILS_PATH})
-# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/psdk_lib/include)
-# include_directories(include/Payload-SDK-ROS2)
-
 include_directories(
   ${FFMPEG_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
   include
-  include/Payload-SDK-ROS2
+  include/payload_sdk_ros2
   include/common
   include/hal
   include/module_sample_cpp
@@ -112,14 +109,17 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/psdk_lib/include
 )
 
-set(dependencies
+set(ros_dependencies
   rclcpp
+  rclcpp_action
+  rclcpp_components
   sensor_msgs
   geometry_msgs
   std_msgs
   nav_msgs
   cv_bridge
   image_transport
+  payload_sdk_ros2_interfaces
 )
 
 add_executable(psdk_wrapper_node
@@ -127,6 +127,14 @@ add_executable(psdk_wrapper_node
   src/psdk_wrapper_node.cpp 
   src/liveview.cpp
   ${DJI_STREAMING_PATH}/test_liveview.cpp
+  src/flight_controller.cpp
+  ${DJI_MODULE_SAMPLE_C_PATH}/flight_control/test_flight_control.c
+)
+
+file(GLOB 
+  MODULE_SAMPLE_C_SOURCES
+  ${DJI_MODULE_SAMPLE_C_PATH}/utils/*.c
+  ${DJI_MODULE_SAMPLE_C_PATH}/widget/*.c
 )
 
 add_library(psdk_wrapper_libs SHARED
@@ -138,18 +146,11 @@ add_library(psdk_wrapper_libs SHARED
   ${DJI_HAL_PATH}/hal_uart.c
   ${DJI_STREAMING_PATH}/dji_camera_image_handler.cpp
   ${DJI_STREAMING_PATH}/dji_camera_stream_decoder.cpp
-  ${DJI_UTILS_PATH}/util_misc.c
-  ${DJI_UTILS_PATH}/util_file.c
-  ${DJI_UTILS_PATH}/cJSON.c
-  ${DJI_UTILS_PATH}/dji_config_manager.c
-  ${DJI_UTILS_PATH}/util_buffer.c
-  ${DJI_UTILS_PATH}/util_time.c
-  ${DJI_UTILS_PATH}/util_link_list.c
-  ${DJI_UTILS_PATH}/util_md5.c
+  ${MODULE_SAMPLE_C_SOURCES}
 )
 
-ament_target_dependencies(psdk_wrapper_libs
-  ${dependencies}
+ament_target_dependencies(psdk_wrapper_node
+  ${ros_dependencies}
 )
 
 target_link_libraries(
@@ -178,7 +179,7 @@ install(TARGETS
 install(DIRECTORY 
   include/
   ${CMAKE_CURRENT_SOURCE_DIR}/psdk_lib/include/
-  include/Payload-SDK-ROS2
+  include/payload_sdk_ros2
   include/common
   include/hal
   include/module_sample_cpp
@@ -203,6 +204,7 @@ install(DIRECTORY
 ament_export_dependencies(
   "rclcpp"
 )
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

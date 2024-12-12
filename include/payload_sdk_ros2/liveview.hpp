@@ -23,11 +23,6 @@ private:
     image_transport::Publisher image_pub_;
     int camera_index_;
 
-    char fpvName[8] = "FPV_CAM";
-    char mainName[9] = "MAIN_CAM";
-    char viceName[9] = "VICE_CAM";
-    char topName[8] = "TOP_CAM";
-
     static void DjiUser_ShowRgbImageCallback(CameraRGBImage img, void *userData);
     void publishImage(cv::Mat &mat);
 
