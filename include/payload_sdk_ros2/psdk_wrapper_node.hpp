@@ -17,7 +17,7 @@ public:
     void initialize();
 
 private:
-    bool is_enable_liveview_ = true;
+    bool is_enable_liveview_ = false;
     bool is_enable_flight_control_ = true;
 
     std::unique_ptr<LiveViewWrapper> liveview_wrapper_;

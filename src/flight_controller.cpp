@@ -94,12 +94,11 @@ void FlightControllerWrapper::execute_takeoff(const std::shared_ptr<rclcpp_actio
 
     if (!DjiTest_FlightControlMonitoredTakeoff()) {
         log_error(node_, "Takeoff failed");
-        result->is_success = false;
-        goal_handle->succeed(result);
+        goal_handle->abort(result);
+        return;
     }
 
     log_info(node_, "Takeoff succeeded");
-    result->is_success = true;
     goal_handle->succeed(result);
 }
 
@@ -112,12 +111,11 @@ void FlightControllerWrapper::execute_land(const std::shared_ptr<rclcpp_action::
 
     if (!DjiTest_FlightControlMonitoredLanding()) {
         log_error(node_, "Land failed");
-        result->is_success = false;
-        goal_handle->succeed(result);
+        goal_handle->abort(result);
+        return;
     }
 
     log_info(node_, "Land succeeded");
-    result->is_success = true;
     goal_handle->succeed(result);
 }
 
@@ -128,6 +126,7 @@ void FlightControllerWrapper::handle_obtain_joystick_authority(const std::shared
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
         log_error(node_, "Obtain joystick authority failed");
         response->is_success = false;
+        return;
     }
     log_info(node_, "Obtained joystick authority");
     response->is_success = true;
@@ -140,6 +139,7 @@ void FlightControllerWrapper::handle_release_joystick_authority(const std::share
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
         log_error(node_, "Obtain joystick authority failed");
         response->is_success = false;
+        return;
     }
     log_info(node_, "Obtained joystick authority");
     response->is_success = true;
