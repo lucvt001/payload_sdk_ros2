@@ -9,10 +9,11 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
     }
     log_info(node_, "Init flight control wrapper success");
 
+    std::string node_name = node_->get_name();
 
     takeoff_action_server_ = rclcpp_action::create_server<payload_sdk_ros2_interfaces::action::TakeOff>
     (
-        node_, "takeoff",
+        node_, node_name + "/takeoff_action",
         [this](const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const payload_sdk_ros2_interfaces::action::TakeOff::Goal> goal) {
             RCLCPP_INFO(node_->get_logger(), "Received takeoff goal request");
             (void)uuid;
@@ -34,7 +35,7 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
 
     land_action_server_ = rclcpp_action::create_server<payload_sdk_ros2_interfaces::action::Land>
     (
-        node_, "land",
+        node_, node_name + "/land_action",
         [this](const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const payload_sdk_ros2_interfaces::action::Land::Goal> goal) {
             RCLCPP_INFO(node_->get_logger(), "Received land goal request");
             (void)uuid;
@@ -56,7 +57,7 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
 
     move_to_position_action_server_ = rclcpp_action::create_server<payload_sdk_ros2_interfaces::action::MoveToPosition>
     (
-        node_, "move_to_position",
+        node_, node_name + "/move_to_position_action",
         [this](const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const payload_sdk_ros2_interfaces::action::MoveToPosition::Goal> goal) {
             RCLCPP_INFO(node_->get_logger(), "Received move to position goal request");
             (void)uuid;
@@ -77,7 +78,7 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
     );
 
     obtain_joystick_authority_service_ = node_->create_service<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority>(
-        "obtain_joystick_authority",
+        node_name + "/obtain_joystick_authority_service",
         [this](const std::shared_ptr<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority::Request> request,
                std::shared_ptr<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority::Response> response) {
             handle_obtain_joystick_authority(request, response);
@@ -85,7 +86,7 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
     );
 
     release_joystick_authority_service_ = node_->create_service<payload_sdk_ros2_interfaces::srv::ReleaseJoystickAuthority>(
-        "release_joystick_authority",
+        node_name + "/release_joystick_authority_service",
         [this](const std::shared_ptr<payload_sdk_ros2_interfaces::srv::ReleaseJoystickAuthority::Request> request,
                std::shared_ptr<payload_sdk_ros2_interfaces::srv::ReleaseJoystickAuthority::Response> response) {
             handle_release_joystick_authority(request, response);
@@ -93,7 +94,7 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
     );
 
     set_joystick_mode_service_ = node_->create_service<payload_sdk_ros2_interfaces::srv::SetJoystickMode>(
-        "set_joystick_mode",
+        node_name + "/set_joystick_mode_service",
         [this](const std::shared_ptr<payload_sdk_ros2_interfaces::srv::SetJoystickMode::Request> request,
                std::shared_ptr<payload_sdk_ros2_interfaces::srv::SetJoystickMode::Response> response) {
             handle_set_joystick_mode(request, response);
@@ -101,13 +102,13 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
     );
 
     joystick_command_subscriber_ = node_->create_subscription<payload_sdk_ros2_interfaces::msg::JoystickCommand>(
-        "joystick_command",
+        node_name + "/joystick_command",
         10,
         std::bind(&FlightControllerWrapper::joystick_command_callback, this, std::placeholders::_1)
     );
 
     velocity_command_subscriber_ = node_->create_subscription<payload_sdk_ros2_interfaces::msg::VelocityCommand>(
-        "velocity_command",
+        node_name + "/velocity_command",
         10,
         std::bind(&FlightControllerWrapper::velocity_command_callback, this, std::placeholders::_1)
     );
@@ -155,13 +156,19 @@ void FlightControllerWrapper::execute_move_to_position(const std::shared_ptr<rcl
     std::stringstream ss;
     ss << "Moving to position: x=" << x << ", y=" << y << ", z=" << z << ", yaw=" << yaw;
     log_info(node_, ss.str().c_str());
-
     auto result = std::make_shared<payload_sdk_ros2_interfaces::action::MoveToPosition::Result>();
 
-    if (!DjiTest_FlightControlMoveByPositionOffset(     // This function will implicitly set joystick mode to all position control
+    auto timeout_duration = std::chrono::seconds(20);
+    auto future = std::async(std::launch::async, [this, x, y, z, yaw]() {
+        return DjiTest_FlightControlMoveByPositionOffset(     // This function will implicitly set joystick mode to all position control
             (T_DjiTestFlightControlVector3f) {x, y, z}, 
-            yaw, 0.8, 1)) 
-    {
+            yaw, 0.8, 1);
+    });
+
+    if (future.wait_for(timeout_duration) == std::future_status::timeout) {
+        log_error(node_, "Move to position timed out");
+        goal_handle->abort(result);
+    } else if (!future.get()) {
         log_error(node_, "Move to position failed");
         goal_handle->abort(result);
     } else {
