@@ -5,6 +5,7 @@
 #include <string>
 #include <payload_sdk_ros2/application.hpp>
 #include <payload_sdk_ros2/liveview.hpp>
+#include <payload_sdk_ros2/flight_controller.hpp>
 
 class PSDKWrapper : public rclcpp::Node
 {
@@ -20,6 +21,7 @@ private:
     bool is_enable_flight_control_ = true;
 
     std::unique_ptr<LiveViewWrapper> liveview_wrapper_;
+    std::unique_ptr<FlightControllerWrapper> flight_controller_wrapper_;
 };
 
 #endif // PSDK_WRAPPER_HPP

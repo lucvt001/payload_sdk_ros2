@@ -12,6 +12,11 @@ void PSDKWrapper::initialize()
         liveview_wrapper_ = std::make_unique<LiveViewWrapper>(this->shared_from_this());
         RCLCPP_INFO(get_logger(), "Liveview enabled");
     }
+
+    if (is_enable_flight_control_) {
+        flight_controller_wrapper_ = std::make_unique<FlightControllerWrapper>(this->shared_from_this());
+        RCLCPP_INFO(get_logger(), "Flight control enabled");
+    }
 }
 
 PSDKWrapper::~PSDKWrapper()
