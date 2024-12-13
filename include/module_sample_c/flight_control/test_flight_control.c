@@ -1383,7 +1383,7 @@ bool
 DjiTest_FlightControlMoveByPositionOffset(const T_DjiTestFlightControlVector3f offsetDesired, float yawDesiredInDeg,
                                           float posThresholdInM, float yawThresholdInDeg)
 {
-    int timeoutInMilSec = 20000;
+    int timeoutInMilSec = 60000;
     int controlFreqInHz = 50;  // Hz
     int cycleTimeInMs = 1000 / controlFreqInHz;
     int outOfControlBoundsTimeLimit = 10 * cycleTimeInMs;    // 10 cycles
