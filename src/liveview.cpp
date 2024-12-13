@@ -13,7 +13,7 @@ LiveViewWrapper::LiveViewWrapper(std::shared_ptr<rclcpp::Node> node)
     }
     // --------------------------------------------------------------
 
-    node_->declare_parameter("camera_index", 0);
+    node_->declare_parameter("camera_index", 1);
     node_->get_parameter("camera_index", camera_index_);
 
     switch (camera_index_) {
