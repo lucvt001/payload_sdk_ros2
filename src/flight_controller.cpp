@@ -54,6 +54,28 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
         }
     );
 
+    move_to_position_action_server_ = rclcpp_action::create_server<payload_sdk_ros2_interfaces::action::MoveToPosition>
+    (
+        node_, "move_to_position",
+        [this](const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const payload_sdk_ros2_interfaces::action::MoveToPosition::Goal> goal) {
+            RCLCPP_INFO(node_->get_logger(), "Received move to position goal request");
+            (void)uuid;
+            // Accept the goal
+            return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+        },
+        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::MoveToPosition>> goal_handle) {
+            RCLCPP_INFO(node_->get_logger(), "Received request to cancel move to position goal");
+            // Accept the cancel request
+            return rclcpp_action::CancelResponse::ACCEPT;
+        },
+        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::MoveToPosition>> goal_handle) {
+            // Execute the goal in a separate thread
+            std::thread([this, goal_handle]() {
+                execute_move_to_position(goal_handle);
+            }).detach();
+        }
+    );
+
     obtain_joystick_authority_service_ = node_->create_service<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority>(
         "obtain_joystick_authority",
         [this](const std::shared_ptr<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority::Request> request,
@@ -83,6 +105,12 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
         10,
         std::bind(&FlightControllerWrapper::joystick_command_callback, this, std::placeholders::_1)
     );
+
+    velocity_command_subscriber_ = node_->create_subscription<payload_sdk_ros2_interfaces::msg::VelocityCommand>(
+        "velocity_command",
+        10,
+        std::bind(&FlightControllerWrapper::velocity_command_callback, this, std::placeholders::_1)
+    );
 }
 
 
@@ -95,11 +123,10 @@ void FlightControllerWrapper::execute_takeoff(const std::shared_ptr<rclcpp_actio
     if (!DjiTest_FlightControlMonitoredTakeoff()) {
         log_error(node_, "Takeoff failed");
         goal_handle->abort(result);
-        return;
+    } else {
+        log_info(node_, "Takeoff succeeded");
+        goal_handle->succeed(result);
     }
-
-    log_info(node_, "Takeoff succeeded");
-    goal_handle->succeed(result);
 }
 
 
@@ -112,11 +139,35 @@ void FlightControllerWrapper::execute_land(const std::shared_ptr<rclcpp_action::
     if (!DjiTest_FlightControlMonitoredLanding()) {
         log_error(node_, "Land failed");
         goal_handle->abort(result);
-        return;
+    } else {
+        log_info(node_, "Land succeeded");
+        goal_handle->succeed(result);
     }
+}
 
-    log_info(node_, "Land succeeded");
-    goal_handle->succeed(result);
+void FlightControllerWrapper::execute_move_to_position(const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::MoveToPosition>> goal_handle)
+{
+    auto goal = goal_handle->get_goal();
+    float x = goal->x;
+    float y = goal->y;
+    float z = goal->z;
+    float yaw = goal->yaw;
+    std::stringstream ss;
+    ss << "Moving to position: x=" << x << ", y=" << y << ", z=" << z << ", yaw=" << yaw;
+    log_info(node_, ss.str().c_str());
+
+    auto result = std::make_shared<payload_sdk_ros2_interfaces::action::MoveToPosition::Result>();
+
+    if (!DjiTest_FlightControlMoveByPositionOffset(     // This function will implicitly set joystick mode to all position control
+            (T_DjiTestFlightControlVector3f) {x, y, z}, 
+            yaw, 0.8, 1)) 
+    {
+        log_error(node_, "Move to position failed");
+        goal_handle->abort(result);
+    } else {
+        log_info(node_, "Move to position succeeded");
+        goal_handle->succeed(result);
+    }
 }
 
 void FlightControllerWrapper::handle_obtain_joystick_authority(const std::shared_ptr<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority::Request> request,
@@ -126,10 +177,10 @@ void FlightControllerWrapper::handle_obtain_joystick_authority(const std::shared
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
         log_error(node_, "Obtain joystick authority failed");
         response->is_success = false;
-        return;
+    } else {
+        log_info(node_, "Obtained joystick authority");
+        response->is_success = true;
     }
-    log_info(node_, "Obtained joystick authority");
-    response->is_success = true;
 }
 
 void FlightControllerWrapper::handle_release_joystick_authority(const std::shared_ptr<payload_sdk_ros2_interfaces::srv::ReleaseJoystickAuthority::Request> request,
@@ -139,10 +190,10 @@ void FlightControllerWrapper::handle_release_joystick_authority(const std::share
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
         log_error(node_, "Obtain joystick authority failed");
         response->is_success = false;
-        return;
+    } else {
+        log_info(node_, "Obtained joystick authority");
+        response->is_success = true;
     }
-    log_info(node_, "Obtained joystick authority");
-    response->is_success = true;
 }
 
 void FlightControllerWrapper::handle_set_joystick_mode(const std::shared_ptr<payload_sdk_ros2_interfaces::srv::SetJoystickMode::Request> request,
@@ -171,11 +222,20 @@ void FlightControllerWrapper::joystick_command_callback(const payload_sdk_ros2_i
     DjiFlightController_ExecuteJoystickAction(joystickCommand);
 }
 
+void FlightControllerWrapper::velocity_command_callback(const payload_sdk_ros2_interfaces::msg::VelocityCommand::SharedPtr msg)
+{
+    float x = msg->x;   // m/s
+    float y = msg->y;   // m/s
+    float z = msg->z;   // m/s
+    float yaw = msg->yaw;   // deg/s
+    DjiTest_FlightControlVelocityAndYawRateCtrl((T_DjiTestFlightControlVector3f) {x, y, z}, yaw, 100);
+}
+
 FlightControllerWrapper::~FlightControllerWrapper()
 {
     T_DjiReturnCode returnCode = DjiTest_FlightControlDeInit();
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
         log_error(node_, "Deinit flight control wrapper failed");
-    }
-    log_info(node_, "Deinit flight control wrapper success");
+    } else
+        log_info(node_, "Deinit flight control wrapper success");
 }

@@ -8,10 +8,12 @@
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <payload_sdk_ros2_interfaces/action/take_off.hpp>
 #include <payload_sdk_ros2_interfaces/action/land.hpp>
+#include <payload_sdk_ros2_interfaces/action/move_to_position.hpp>
 #include <payload_sdk_ros2_interfaces/srv/obtain_joystick_authority.hpp>
 #include <payload_sdk_ros2_interfaces/srv/release_joystick_authority.hpp>
 #include <payload_sdk_ros2_interfaces/srv/set_joystick_mode.hpp>
 #include <payload_sdk_ros2_interfaces/msg/joystick_command.hpp>
+#include <payload_sdk_ros2_interfaces/msg/velocity_command.hpp>
 
 class FlightControllerWrapper
 {
@@ -24,15 +26,18 @@ private:
 
     rclcpp_action::Server<payload_sdk_ros2_interfaces::action::TakeOff>::SharedPtr takeoff_action_server_;
     rclcpp_action::Server<payload_sdk_ros2_interfaces::action::Land>::SharedPtr land_action_server_;
+    rclcpp_action::Server<payload_sdk_ros2_interfaces::action::MoveToPosition>::SharedPtr move_to_position_action_server_;
 
     rclcpp::Service<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority>::SharedPtr obtain_joystick_authority_service_;
     rclcpp::Service<payload_sdk_ros2_interfaces::srv::ReleaseJoystickAuthority>::SharedPtr release_joystick_authority_service_;
     rclcpp::Service<payload_sdk_ros2_interfaces::srv::SetJoystickMode>::SharedPtr set_joystick_mode_service_;
 
     rclcpp::Subscription<payload_sdk_ros2_interfaces::msg::JoystickCommand>::SharedPtr joystick_command_subscriber_;
+    rclcpp::Subscription<payload_sdk_ros2_interfaces::msg::VelocityCommand>::SharedPtr velocity_command_subscriber_;
 
     void execute_takeoff(const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::TakeOff>> goal_handle);
     void execute_land(const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::Land>> goal_handle);
+    void execute_move_to_position(const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::MoveToPosition>> goal_handle);
 
     void handle_obtain_joystick_authority(const std::shared_ptr<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority::Request> request,
                                           std::shared_ptr<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority::Response> response);
@@ -41,6 +46,7 @@ private:
     void handle_set_joystick_mode(const std::shared_ptr<payload_sdk_ros2_interfaces::srv::SetJoystickMode::Request> request,
                                         std::shared_ptr<payload_sdk_ros2_interfaces::srv::SetJoystickMode::Response> response);
     void joystick_command_callback(const payload_sdk_ros2_interfaces::msg::JoystickCommand::SharedPtr msg);
+    void velocity_command_callback(const payload_sdk_ros2_interfaces::msg::VelocityCommand::SharedPtr msg);
 
 };
 
