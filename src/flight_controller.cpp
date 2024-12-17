@@ -1,13 +1,25 @@
 #include <payload_sdk_ros2/flight_controller.hpp>
 
+FlightControllerWrapper* FlightControllerWrapper::instance_ = nullptr;
 FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> node)
     : node_(node)
 {
+    instance_ = this;
     T_DjiReturnCode returnCode = DjiTest_FlightControlInit();
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
         log_error(node_, "Init flight control wrapper failed");
+        return;
     }
-    log_info(node_, "Init flight control wrapper success");
+    else
+        log_info(node_, "Init flight control wrapper success");
+
+    returnCode = DjiFlightController_RegJoystickCtrlAuthorityEventCallback(
+        &FlightControllerWrapper::JoystickCtrlAuthSwitchEventCallbackStatic);
+
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS && returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_NONSUPPORT) {
+        log_error(node_, "Register joystick control authority event callback failed");
+        return;
+    }
 
     std::string node_name = node_->get_name();
 
@@ -158,7 +170,7 @@ void FlightControllerWrapper::execute_move_to_position(const std::shared_ptr<rcl
     log_info(node_, ss.str().c_str());
     auto result = std::make_shared<payload_sdk_ros2_interfaces::action::MoveToPosition::Result>();
 
-    auto timeout_duration = std::chrono::seconds(20);
+    auto timeout_duration = std::chrono::seconds(goal->timeout);
     auto future = std::async(std::launch::async, [this, x, y, z, yaw]() {
         return DjiTest_FlightControlMoveByPositionOffset(     // This function will implicitly set joystick mode to all position control
             (T_DjiTestFlightControlVector3f) {x, y, z}, 
@@ -166,13 +178,30 @@ void FlightControllerWrapper::execute_move_to_position(const std::shared_ptr<rcl
     });
 
     if (future.wait_for(timeout_duration) == std::future_status::timeout) {
-        log_error(node_, "Move to position timed out");
-        goal_handle->abort(result);
+        if (current_control_authority_ == DJI_FLIGHT_CONTROLLER_JOYSTICK_CTRL_AUTHORITY_RC) {
+            log_error(node_, "Move to position failed: RC took over control authority.");
+            result->error_code = 2;
+            goal_handle->abort(result);
+        } else if (current_control_authority_ == DJI_FLIGHT_CONTROLLER_JOYSTICK_CTRL_AUTHORITY_MSDK) {
+            log_error(node_, "Move to position failed: MSDK took over control authority.");
+            result->error_code = 2;
+            goal_handle->abort(result);
+        } else if (current_control_authority_ == DJI_FLIGHT_CONTROLLER_JOYSTICK_CTRL_AUTHORITY_INTERNAL) {
+            log_error(node_, "Move to position failed: Internal took over control authority.");
+            result->error_code = 2;
+            goal_handle->abort(result);
+        } else {
+            log_error(node_, "Move to position failed due to timeout.");
+            result->error_code = 3;
+            goal_handle->abort(result);
+        }
     } else if (!future.get()) {
-        log_error(node_, "Move to position failed");
+        log_error(node_, "Move to position failed due to other errors.");
+        result->error_code = 3;
         goal_handle->abort(result);
     } else {
         log_info(node_, "Move to position succeeded");
+        result->error_code = 0;
         goal_handle->succeed(result);
     }
 }
@@ -236,6 +265,73 @@ void FlightControllerWrapper::velocity_command_callback(const payload_sdk_ros2_i
     float z = msg->z;   // m/s
     float yaw = msg->yaw;   // deg/s
     DjiTest_FlightControlVelocityAndYawRateCtrl((T_DjiTestFlightControlVector3f) {x, y, z}, yaw, 100);
+}
+
+T_DjiReturnCode FlightControllerWrapper::JoystickCtrlAuthSwitchEventCallbackStatic(T_DjiFlightControllerJoystickCtrlAuthorityEventInfo eventData) {
+    // Boilerplate function to call non-static member function
+    return instance_->JoystickCtrlAuthSwitchEventCallback(eventData);
+}
+
+T_DjiReturnCode FlightControllerWrapper::JoystickCtrlAuthSwitchEventCallback(T_DjiFlightControllerJoystickCtrlAuthorityEventInfo eventData) 
+{
+    current_control_authority_ = eventData.curJoystickCtrlAuthority;
+    switch (eventData.joystickCtrlAuthoritySwitchEvent) {
+        case DJI_FLIGHT_CONTROLLER_MSDK_GET_JOYSTICK_CTRL_AUTH_EVENT: {
+            if (current_control_authority_ == DJI_FLIGHT_CONTROLLER_JOYSTICK_CTRL_AUTHORITY_MSDK) {
+                log_info(node_, "[Event]Msdk request to obtain joystick ctrl authority\r\n");
+            } else {
+                log_info(node_, "[Event]Msdk request to release joystick ctrl authority\r\n");
+            }
+            break;
+        }
+        case DJI_FLIGHT_CONTROLLER_INTERNAL_GET_JOYSTICK_CTRL_AUTH_EVENT: {
+            if (current_control_authority_ == DJI_FLIGHT_CONTROLLER_JOYSTICK_CTRL_AUTHORITY_INTERNAL) {
+                log_info(node_, "[Event]Internal request to obtain joystick ctrl authority\r\n");
+            } else {
+                log_info(node_, "[Event]Internal request to release joystick ctrl authority\r\n");
+            }
+            break;
+        }
+        case DJI_FLIGHT_CONTROLLER_OSDK_GET_JOYSTICK_CTRL_AUTH_EVENT: {
+            if (current_control_authority_ == DJI_FLIGHT_CONTROLLER_JOYSTICK_CTRL_AUTHORITY_OSDK) {
+                log_info(node_, "[Event] PSDK request to obtain joystick ctrl authority\r\n");
+            } else {
+                log_info(node_, "[Event] PSDK request to release joystick ctrl authority\r\n");
+            }
+            break;
+        }
+        case DJI_FLIGHT_CONTROLLER_RC_LOST_GET_JOYSTICK_CTRL_AUTH_EVENT :
+            log_info(node_, "[Event]Current joystick ctrl authority is reset to rc due to rc lost\r\n");
+            break;
+        case DJI_FLIGHT_CONTROLLER_RC_NOT_P_MODE_RESET_JOYSTICK_CTRL_AUTH_EVENT :
+            log_info(node_, "[Event]Current joystick ctrl authority is reset to rc for rc is not in P mode\r\n");
+            break;
+        case DJI_FLIGHT_CONTROLLER_RC_SWITCH_MODE_GET_JOYSTICK_CTRL_AUTH_EVENT :
+            log_info(node_, "[Event]Current joystick ctrl authority is reset to rc due to rc switching mode\r\n");
+            break;
+        case DJI_FLIGHT_CONTROLLER_RC_PAUSE_GET_JOYSTICK_CTRL_AUTH_EVENT :
+            log_info(node_, "[Event]Current joystick ctrl authority is reset to rc due to rc pausing\r\n");
+            break;
+        case DJI_FLIGHT_CONTROLLER_RC_REQUEST_GO_HOME_GET_JOYSTICK_CTRL_AUTH_EVENT :
+            log_info(node_, "[Event]Current joystick ctrl authority is reset to rc due to rc request for return\r\n");
+            break;
+        case DJI_FLIGHT_CONTROLLER_LOW_BATTERY_GO_HOME_RESET_JOYSTICK_CTRL_AUTH_EVENT :
+            log_info(node_, "[Event]Current joystick ctrl authority is reset to rc for low battery return\r\n");
+            break;
+        case DJI_FLIGHT_CONTROLLER_LOW_BATTERY_LANDING_RESET_JOYSTICK_CTRL_AUTH_EVENT :
+            log_info(node_, "[Event]Current joystick ctrl authority is reset to rc for low battery land\r\n");
+            break;
+        case DJI_FLIGHT_CONTROLLER_OSDK_LOST_GET_JOYSTICK_CTRL_AUTH_EVENT:
+            log_info(node_, "[Event]Current joystick ctrl authority is reset to rc due to sdk lost\r\n");
+            break;
+        case DJI_FLIGHT_CONTROLLER_NERA_FLIGHT_BOUNDARY_RESET_JOYSTICK_CTRL_AUTH_EVENT :
+            log_info(node_, "[Event]Current joystick ctrl authority is reset to rc due to near boundary\r\n");
+            break;
+        default:
+            log_info(node_, "[Event]Unknown joystick ctrl authority event\r\n");
+    }
+
+    return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
 }
 
 FlightControllerWrapper::~FlightControllerWrapper()

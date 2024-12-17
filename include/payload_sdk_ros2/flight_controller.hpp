@@ -25,6 +25,8 @@ public:
 
 private:
     std::shared_ptr<rclcpp::Node> node_;
+    E_DjiFlightControllerJoystickCtrlAuthority current_control_authority_;
+    
 
     rclcpp_action::Server<payload_sdk_ros2_interfaces::action::TakeOff>::SharedPtr takeoff_action_server_;
     rclcpp_action::Server<payload_sdk_ros2_interfaces::action::Land>::SharedPtr land_action_server_;
@@ -50,6 +52,9 @@ private:
     void joystick_command_callback(const payload_sdk_ros2_interfaces::msg::JoystickCommand::SharedPtr msg);
     void velocity_command_callback(const payload_sdk_ros2_interfaces::msg::VelocityCommand::SharedPtr msg);
 
+    static T_DjiReturnCode JoystickCtrlAuthSwitchEventCallbackStatic(T_DjiFlightControllerJoystickCtrlAuthorityEventInfo eventData);
+    T_DjiReturnCode JoystickCtrlAuthSwitchEventCallback(T_DjiFlightControllerJoystickCtrlAuthorityEventInfo eventData);
+    static FlightControllerWrapper* instance_;
 };
 
 #endif // FLIGHT_CONTROLLER_HPP
