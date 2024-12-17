@@ -16,6 +16,9 @@ RUN apt-get update && apt-get upgrade -y && \
     && rm -rf /var/lib/apt/lists/*
 
 # Add ROS setup to .bashrc
+RUN echo "unset AMENT_PREFIX_PATH" >> /root/.bashrc
+RUN echo "unset COLCON_PREFIX_PATH" >> /root/.bashrc
+RUN echo "unset CMAKE_PREFIX_PATH" >> /root/.bashrc
 RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
 RUN echo "source /ros2_ws/install/setup.bash" >> /root/.bashrc
 RUN echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> /root/.bashrc
