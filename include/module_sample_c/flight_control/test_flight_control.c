@@ -181,13 +181,13 @@ T_DjiReturnCode DjiTest_FlightControlInit(void)
         return returnCode;
     }
 
-    returnCode = DjiFlightController_RegJoystickCtrlAuthorityEventCallback(
-        DjiTest_FlightControlJoystickCtrlAuthSwitchEventCallback);
+    // returnCode = DjiFlightController_RegJoystickCtrlAuthorityEventCallback(
+    //     DjiTest_FlightControlJoystickCtrlAuthSwitchEventCallback);
 
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS && returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_NONSUPPORT) {
-        USER_LOG_ERROR("Register joystick control authority event callback failed,error code:0x%08llX", returnCode);
-        return returnCode;
-    }
+    // if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS && returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_NONSUPPORT) {
+    //     USER_LOG_ERROR("Register joystick control authority event callback failed,error code:0x%08llX", returnCode);
+    //     return returnCode;
+    // }
 
     return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
 }
@@ -1402,16 +1402,17 @@ DjiTest_FlightControlMoveByPositionOffset(const T_DjiTestFlightControlVector3f o
         return false;
     }
 
-    T_DjiFlightControllerJoystickMode joystickMode = {
-        DJI_FLIGHT_CONTROLLER_HORIZONTAL_POSITION_CONTROL_MODE,
-        DJI_FLIGHT_CONTROLLER_VERTICAL_POSITION_CONTROL_MODE,
-        DJI_FLIGHT_CONTROLLER_YAW_ANGLE_CONTROL_MODE,
-        DJI_FLIGHT_CONTROLLER_HORIZONTAL_GROUND_COORDINATE,
-        DJI_FLIGHT_CONTROLLER_STABLE_CONTROL_MODE_ENABLE,
-    };
-    DjiFlightController_SetJoystickMode(joystickMode);
+    // T_DjiFlightControllerJoystickMode joystickMode = {
+    //     DJI_FLIGHT_CONTROLLER_HORIZONTAL_POSITION_CONTROL_MODE,
+    //     DJI_FLIGHT_CONTROLLER_VERTICAL_POSITION_CONTROL_MODE,
+    //     DJI_FLIGHT_CONTROLLER_YAW_ANGLE_CONTROL_MODE,
+    //     DJI_FLIGHT_CONTROLLER_HORIZONTAL_GROUND_COORDINATE,
+    //     DJI_FLIGHT_CONTROLLER_STABLE_CONTROL_MODE_ENABLE,
+    // };
+    // DjiFlightController_SetJoystickMode(joystickMode);
 
-    while (elapsedTimeInMs < timeoutInMilSec) {
+    while (elapsedTimeInMs < timeoutInMilSec) 
+    {
         T_DjiFcSubscriptionPositionFused currentGPSPosition = DjiTest_FlightControlGetValueOfPositionFused();
         T_DjiFcSubscriptionQuaternion currentQuaternion = DjiTest_FlightControlGetValueOfQuaternion();
         dji_f32_t currentHeight = DjiTest_FlightControlGetValueOfRelativeHeight();
@@ -1485,15 +1486,15 @@ void DjiTest_FlightControlVelocityAndYawRateCtrl(const T_DjiTestFlightControlVec
     osalHandler->GetTimeMs(&originTime);
     osalHandler->GetTimeMs(&currentTime);
     elapsedTimeInMs = currentTime - originTime;
-    T_DjiFlightControllerJoystickMode joystickMode = {
-        DJI_FLIGHT_CONTROLLER_HORIZONTAL_VELOCITY_CONTROL_MODE,
-        DJI_FLIGHT_CONTROLLER_VERTICAL_VELOCITY_CONTROL_MODE,
-        DJI_FLIGHT_CONTROLLER_YAW_ANGLE_RATE_CONTROL_MODE,
-        DJI_FLIGHT_CONTROLLER_HORIZONTAL_GROUND_COORDINATE,
-        DJI_FLIGHT_CONTROLLER_STABLE_CONTROL_MODE_ENABLE,
-    };
+    // T_DjiFlightControllerJoystickMode joystickMode = {
+    //     DJI_FLIGHT_CONTROLLER_HORIZONTAL_VELOCITY_CONTROL_MODE,
+    //     DJI_FLIGHT_CONTROLLER_VERTICAL_VELOCITY_CONTROL_MODE,
+    //     DJI_FLIGHT_CONTROLLER_YAW_ANGLE_RATE_CONTROL_MODE,
+    //     DJI_FLIGHT_CONTROLLER_HORIZONTAL_GROUND_COORDINATE,
+    //     DJI_FLIGHT_CONTROLLER_STABLE_CONTROL_MODE_ENABLE,
+    // };
 
-    DjiFlightController_SetJoystickMode(joystickMode);
+    // DjiFlightController_SetJoystickMode(joystickMode);
     T_DjiFlightControllerJoystickCommand joystickCommand = {offsetDesired.x, offsetDesired.y, offsetDesired.z,
                                                             yawRate};
 
