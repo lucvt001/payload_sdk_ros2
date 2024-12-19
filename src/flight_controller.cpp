@@ -192,7 +192,7 @@ void FlightControllerWrapper::execute_move_to_position(const std::shared_ptr<rcl
             goal_handle->abort(result);
         } else {
             log_error(node_, "Move to position failed due to timeout.");
-            result->error_code = 3;
+            result->error_code = 1;
             goal_handle->abort(result);
         }
     } else if (!future.get()) {

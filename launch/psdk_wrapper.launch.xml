@@ -1,5 +1,6 @@
 <launch>
-    <node pkg="payload-sdk-ros2" exec="psdk_wrapper_node" name="psdk_wrapper_node" output="screen">
+    <node pkg="payload_sdk_ros2" exec="psdk_wrapper_node" name="psdk_wrapper_node" output="screen"
+        args="/docker_ws/src/payload_sdk_ros2/cfg/dji_sdk_config.json">
         <!-- Add your parameters and remappings here -->
     </node>
 </launch>
