@@ -38,7 +38,7 @@ private:
     void publishImage(cv::Mat &mat);
     void startCameraStream();
     void stopCameraStream();
-    void enableRecordingCallback(const std::shared_ptr<psdk_interfaces::srv::EnableRecording::Request> request, std::shared_ptr<psdk_interfaces::srv::EnableRecording::Response> response);
+    void handleEnableRecording(const std::shared_ptr<psdk_interfaces::srv::EnableRecording::Request> request, std::shared_ptr<psdk_interfaces::srv::EnableRecording::Response> response);
 
     LiveviewSample *liveviewSample;
 };

@@ -3,6 +3,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <module_sample_c/widget/test_widget.h>
+#include "dji_logger.h"
 
 inline void log_info(const std::shared_ptr<rclcpp::Node>& node, const std::string& text)
 {

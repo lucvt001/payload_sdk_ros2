@@ -37,7 +37,7 @@ LiveViewWrapper::LiveViewWrapper(std::shared_ptr<rclcpp::Node> node)
     RCLCPP_INFO(node_->get_logger(), "Publishing camera images to topic: %s", topic_name_.c_str());
 
     enable_recording_srv_ = node_->create_service<psdk_interfaces::srv::EnableRecording>(
-        enable_recording_server_name_, std::bind(&LiveViewWrapper::enableRecordingCallback, this, std::placeholders::_1, std::placeholders::_2));
+        enable_recording_server_name_, std::bind(&LiveViewWrapper::handleEnableRecording, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void LiveViewWrapper::DjiUser_ShowRgbImageCallback(CameraRGBImage img, void *userData)
@@ -69,7 +69,7 @@ void LiveViewWrapper::publishImage(cv::Mat &mat)
     }
 }
 
-void LiveViewWrapper::enableRecordingCallback(const std::shared_ptr<psdk_interfaces::srv::EnableRecording::Request> request, std::shared_ptr<psdk_interfaces::srv::EnableRecording::Response> response)
+void LiveViewWrapper::handleEnableRecording(const std::shared_ptr<psdk_interfaces::srv::EnableRecording::Request> request, std::shared_ptr<psdk_interfaces::srv::EnableRecording::Response> response)
 {
     if (request->is_enable) 
     {
@@ -160,5 +160,6 @@ void LiveViewWrapper::stopCameraStream()
 
 LiveViewWrapper::~LiveViewWrapper()
 {
+    std::cout << "Deinit liveview sample" << std::endl;
     stopCameraStream();
 }
