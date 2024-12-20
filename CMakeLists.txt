@@ -126,6 +126,7 @@ add_executable(psdk_wrapper_node
   src/application.cpp 
   src/psdk_wrapper_node.cpp 
   src/liveview.cpp
+  src/utils.cpp
   ${DJI_STREAMING_PATH}/test_liveview.cpp
   src/flight_controller.cpp
   ${DJI_MODULE_SAMPLE_C_PATH}/flight_control/test_flight_control.c
@@ -193,6 +194,7 @@ install(DIRECTORY
 install(DIRECTORY
   cfg
   launch
+  recordings
   DESTINATION share/${PROJECT_NAME}/
 )
 
