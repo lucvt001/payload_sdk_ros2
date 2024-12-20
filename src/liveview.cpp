@@ -54,8 +54,12 @@ void LiveViewWrapper::DjiUser_ShowRgbImageCallback(CameraRGBImage img, void *use
 
     live_view_wrapper->publishImage(mat);
 
-    if (live_view_wrapper->video_writer_.isOpened()) 
-        live_view_wrapper->video_writer_ << mat; // Write the frame to the video
+    if (live_view_wrapper->video_writer_.isOpened()) {
+        cv::Mat resized_mat;
+        cv::Size frame_size(640, 480); // The size you initialized the VideoWriter with
+        cv::resize(mat, resized_mat, frame_size);
+        live_view_wrapper->video_writer_ << resized_mat; // Write the frame to the video
+    }
 }
 
 void LiveViewWrapper::publishImage(cv::Mat &mat)
@@ -119,17 +123,21 @@ void LiveViewWrapper::handleEnableRecording(const std::shared_ptr<psdk_interface
 void LiveViewWrapper::startCameraStream()
 {
     switch (camera_index_) {
-        case '0':
+        case 0:
             liveviewSample->StartFpvCameraStream(&DjiUser_ShowRgbImageCallback, this);
+            cout << "Started FPV camera stream" << endl;
             break;
-        case '1':
+        case 1:
             liveviewSample->StartMainCameraStream(&DjiUser_ShowRgbImageCallback, this);
+            cout << "Started main camera stream" << endl;
             break;
-        case '2':
+        case 2:
             liveviewSample->StartViceCameraStream(&DjiUser_ShowRgbImageCallback, this);
+            cout << "Started vice camera stream" << endl;
             break;
-        case '3':
+        case 3:
             liveviewSample->StartTopCameraStream(&DjiUser_ShowRgbImageCallback, this);
+            cout << "Started top camera stream" << endl;
             break;
         default:
             cout << "Wrong camera index";
@@ -140,16 +148,16 @@ void LiveViewWrapper::startCameraStream()
 void LiveViewWrapper::stopCameraStream()
 {
     switch (camera_index_) {
-        case '0':
+        case 0:
             liveviewSample->StopFpvCameraStream();
             break;
-        case '1':
+        case 1:
             liveviewSample->StopMainCameraStream();
             break;
-        case '2':
+        case 2:
             liveviewSample->StopViceCameraStream();
             break;
-        case '3':
+        case 3:
             liveviewSample->StopTopCameraStream();
             break;
         default:
