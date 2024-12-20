@@ -10,3 +10,6 @@ psdk_wrapper_node:
 
     flight_control:
       is_enable: True
+
+    gimbal:
+      is_enable: True

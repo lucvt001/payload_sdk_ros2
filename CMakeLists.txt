@@ -127,8 +127,9 @@ add_executable(psdk_wrapper_node
   src/psdk_wrapper_node.cpp 
   src/liveview.cpp
   src/utils.cpp
-  ${DJI_STREAMING_PATH}/test_liveview.cpp
   src/flight_controller.cpp
+  src/gimbal.cpp
+  ${DJI_STREAMING_PATH}/test_liveview.cpp
   ${DJI_MODULE_SAMPLE_C_PATH}/flight_control/test_flight_control.c
 )
 
