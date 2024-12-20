@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>payload_sdk_ros2</name>
+  <name>psdk_wrapper</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="luc001@e.ntu.edu.sg">root</maintainer>
@@ -20,7 +20,7 @@
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
 
-  <depend>payload_sdk_ros2_interfaces</depend>
+  <depend>psdk_interfaces</depend>
   
   <depend>rclcpp_action</depend>
   <depend>rclcpp_components</depend>

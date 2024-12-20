@@ -1,4 +1,4 @@
-#include <payload_sdk_ros2/liveview.hpp>
+#include <psdk_wrapper/liveview.hpp>
 
 LiveViewWrapper::LiveViewWrapper(std::shared_ptr<rclcpp::Node> node)
     : node_(node)
@@ -13,17 +13,17 @@ LiveViewWrapper::LiveViewWrapper(std::shared_ptr<rclcpp::Node> node)
     }
     // --------------------------------------------------------------
 
-    node_->declare_parameter<int>("camera_index", 1);
-    node_->declare_parameter<std::string>("mp4_output_folder", "");
-    node_->declare_parameter<std::string>("topic_name", "/sensor/camera");
-    node_->declare_parameter<bool>("is_display", false);
-    node_->declare_parameter<std::string>("enable_recording_server_name", "/psdk_wrapper_node/enable_recording");
+    node_->declare_parameter<int>("liveview.camera_index", 1);
+    node_->declare_parameter<std::string>("liveview.mp4_output_folder", "");
+    node_->declare_parameter<std::string>("liveview.topic_name", "/sensor/camera");
+    node_->declare_parameter<bool>("liveview.is_display", false);
+    node_->declare_parameter<std::string>("liveview.enable_recording_server_name", "/psdk_wrapper_node/enable_recording");
 
-    node_->get_parameter("camera_index", camera_index_);
-    node_->get_parameter("mp4_output_folder", mp4_output_folder_);
-    node_->get_parameter("topic_name", topic_name_);
-    node_->get_parameter("is_display", is_display_);
-    node_->get_parameter("enable_recording_server_name", enable_recording_server_name_);
+    node_->get_parameter("liveview.camera_index", camera_index_);
+    node_->get_parameter("liveview.mp4_output_folder", mp4_output_folder_);
+    node_->get_parameter("liveview.topic_name", topic_name_);
+    node_->get_parameter("liveview.is_display", is_display_);
+    node_->get_parameter("liveview.enable_recording_server_name", enable_recording_server_name_);
 
     if (mp4_output_folder_ == "")
         RCLCPP_WARN(node_->get_logger(), "MP4 recording is NOT enabled!");
@@ -36,7 +36,7 @@ LiveViewWrapper::LiveViewWrapper(std::shared_ptr<rclcpp::Node> node)
     image_pub_ = it.advertise(topic_name_, 1);
     RCLCPP_INFO(node_->get_logger(), "Publishing camera images to topic: %s", topic_name_.c_str());
 
-    enable_recording_srv_ = node_->create_service<payload_sdk_ros2_interfaces::srv::EnableRecording>(
+    enable_recording_srv_ = node_->create_service<psdk_interfaces::srv::EnableRecording>(
         enable_recording_server_name_, std::bind(&LiveViewWrapper::enableRecordingCallback, this, std::placeholders::_1, std::placeholders::_2));
 }
 
@@ -69,7 +69,7 @@ void LiveViewWrapper::publishImage(cv::Mat &mat)
     }
 }
 
-void LiveViewWrapper::enableRecordingCallback(const std::shared_ptr<payload_sdk_ros2_interfaces::srv::EnableRecording::Request> request, std::shared_ptr<payload_sdk_ros2_interfaces::srv::EnableRecording::Response> response)
+void LiveViewWrapper::enableRecordingCallback(const std::shared_ptr<psdk_interfaces::srv::EnableRecording::Request> request, std::shared_ptr<psdk_interfaces::srv::EnableRecording::Response> response)
 {
     if (request->is_enable) 
     {

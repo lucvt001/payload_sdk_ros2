@@ -1,4 +1,4 @@
-#include <payload_sdk_ros2/flight_controller.hpp>
+#include <psdk_wrapper/flight_controller.hpp>
 
 FlightControllerWrapper* FlightControllerWrapper::instance_ = nullptr;
 FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> node)
@@ -23,21 +23,21 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
 
     std::string node_name = node_->get_name();
 
-    takeoff_action_server_ = rclcpp_action::create_server<payload_sdk_ros2_interfaces::action::TakeOff>
+    takeoff_action_server_ = rclcpp_action::create_server<psdk_interfaces::action::TakeOff>
     (
         node_, node_name + "/takeoff_action",
-        [this](const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const payload_sdk_ros2_interfaces::action::TakeOff::Goal> goal) {
+        [this](const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const psdk_interfaces::action::TakeOff::Goal> goal) {
             RCLCPP_INFO(node_->get_logger(), "Received takeoff goal request");
             (void)uuid;
             // Accept the goal
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
         },
-        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::TakeOff>> goal_handle) {
+        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<psdk_interfaces::action::TakeOff>> goal_handle) {
             RCLCPP_INFO(node_->get_logger(), "Received request to cancel takeoff goal");
             // Accept the cancel request
             return rclcpp_action::CancelResponse::ACCEPT;
         },
-        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::TakeOff>> goal_handle) {
+        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<psdk_interfaces::action::TakeOff>> goal_handle) {
             // Execute the goal in a separate thread
             std::thread([this, goal_handle]() {
                 execute_takeoff(goal_handle);
@@ -45,21 +45,21 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
         }
     );
 
-    land_action_server_ = rclcpp_action::create_server<payload_sdk_ros2_interfaces::action::Land>
+    land_action_server_ = rclcpp_action::create_server<psdk_interfaces::action::Land>
     (
         node_, node_name + "/land_action",
-        [this](const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const payload_sdk_ros2_interfaces::action::Land::Goal> goal) {
+        [this](const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const psdk_interfaces::action::Land::Goal> goal) {
             RCLCPP_INFO(node_->get_logger(), "Received land goal request");
             (void)uuid;
             // Accept the goal
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
         },
-        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::Land>> goal_handle) {
+        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<psdk_interfaces::action::Land>> goal_handle) {
             RCLCPP_INFO(node_->get_logger(), "Received request to cancel land goal");
             // Accept the cancel request
             return rclcpp_action::CancelResponse::ACCEPT;
         },
-        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::Land>> goal_handle) {
+        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<psdk_interfaces::action::Land>> goal_handle) {
             // Execute the goal in a separate thread
             std::thread([this, goal_handle]() {
                 execute_land(goal_handle);
@@ -67,21 +67,21 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
         }
     );
 
-    move_to_position_action_server_ = rclcpp_action::create_server<payload_sdk_ros2_interfaces::action::MoveToPosition>
+    move_to_position_action_server_ = rclcpp_action::create_server<psdk_interfaces::action::MoveToPosition>
     (
         node_, node_name + "/move_to_position_action",
-        [this](const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const payload_sdk_ros2_interfaces::action::MoveToPosition::Goal> goal) {
+        [this](const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const psdk_interfaces::action::MoveToPosition::Goal> goal) {
             RCLCPP_INFO(node_->get_logger(), "Received move to position goal request");
             (void)uuid;
             // Accept the goal
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
         },
-        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::MoveToPosition>> goal_handle) {
+        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<psdk_interfaces::action::MoveToPosition>> goal_handle) {
             RCLCPP_INFO(node_->get_logger(), "Received request to cancel move to position goal");
             // Accept the cancel request
             return rclcpp_action::CancelResponse::ACCEPT;
         },
-        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::MoveToPosition>> goal_handle) {
+        [this](const std::shared_ptr<rclcpp_action::ServerGoalHandle<psdk_interfaces::action::MoveToPosition>> goal_handle) {
             // Execute the goal in a separate thread
             std::thread([this, goal_handle]() {
                 execute_move_to_position(goal_handle);
@@ -89,37 +89,37 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
         }
     );
 
-    obtain_joystick_authority_service_ = node_->create_service<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority>(
+    obtain_joystick_authority_service_ = node_->create_service<psdk_interfaces::srv::ObtainJoystickAuthority>(
         node_name + "/obtain_joystick_authority_service",
-        [this](const std::shared_ptr<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority::Request> request,
-               std::shared_ptr<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority::Response> response) {
+        [this](const std::shared_ptr<psdk_interfaces::srv::ObtainJoystickAuthority::Request> request,
+               std::shared_ptr<psdk_interfaces::srv::ObtainJoystickAuthority::Response> response) {
             handle_obtain_joystick_authority(request, response);
         }
     );
 
-    release_joystick_authority_service_ = node_->create_service<payload_sdk_ros2_interfaces::srv::ReleaseJoystickAuthority>(
+    release_joystick_authority_service_ = node_->create_service<psdk_interfaces::srv::ReleaseJoystickAuthority>(
         node_name + "/release_joystick_authority_service",
-        [this](const std::shared_ptr<payload_sdk_ros2_interfaces::srv::ReleaseJoystickAuthority::Request> request,
-               std::shared_ptr<payload_sdk_ros2_interfaces::srv::ReleaseJoystickAuthority::Response> response) {
+        [this](const std::shared_ptr<psdk_interfaces::srv::ReleaseJoystickAuthority::Request> request,
+               std::shared_ptr<psdk_interfaces::srv::ReleaseJoystickAuthority::Response> response) {
             handle_release_joystick_authority(request, response);
         }
     );
 
-    set_joystick_mode_service_ = node_->create_service<payload_sdk_ros2_interfaces::srv::SetJoystickMode>(
+    set_joystick_mode_service_ = node_->create_service<psdk_interfaces::srv::SetJoystickMode>(
         node_name + "/set_joystick_mode_service",
-        [this](const std::shared_ptr<payload_sdk_ros2_interfaces::srv::SetJoystickMode::Request> request,
-               std::shared_ptr<payload_sdk_ros2_interfaces::srv::SetJoystickMode::Response> response) {
+        [this](const std::shared_ptr<psdk_interfaces::srv::SetJoystickMode::Request> request,
+               std::shared_ptr<psdk_interfaces::srv::SetJoystickMode::Response> response) {
             handle_set_joystick_mode(request, response);
         }
     );
 
-    joystick_command_subscriber_ = node_->create_subscription<payload_sdk_ros2_interfaces::msg::JoystickCommand>(
+    joystick_command_subscriber_ = node_->create_subscription<psdk_interfaces::msg::JoystickCommand>(
         node_name + "/joystick_command",
         10,
         std::bind(&FlightControllerWrapper::joystick_command_callback, this, std::placeholders::_1)
     );
 
-    velocity_command_subscriber_ = node_->create_subscription<payload_sdk_ros2_interfaces::msg::VelocityCommand>(
+    velocity_command_subscriber_ = node_->create_subscription<psdk_interfaces::msg::VelocityCommand>(
         node_name + "/velocity_command",
         10,
         std::bind(&FlightControllerWrapper::velocity_command_callback, this, std::placeholders::_1)
@@ -127,11 +127,11 @@ FlightControllerWrapper::FlightControllerWrapper(std::shared_ptr<rclcpp::Node> n
 }
 
 
-void FlightControllerWrapper::execute_takeoff(const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::TakeOff>> goal_handle)
+void FlightControllerWrapper::execute_takeoff(const std::shared_ptr<rclcpp_action::ServerGoalHandle<psdk_interfaces::action::TakeOff>> goal_handle)
 {
     log_info(node_, "Taking off...");
 
-    auto result = std::make_shared<payload_sdk_ros2_interfaces::action::TakeOff::Result>();
+    auto result = std::make_shared<psdk_interfaces::action::TakeOff::Result>();
 
     if (!DjiTest_FlightControlMonitoredTakeoff()) {
         log_error(node_, "Takeoff failed");
@@ -143,11 +143,11 @@ void FlightControllerWrapper::execute_takeoff(const std::shared_ptr<rclcpp_actio
 }
 
 
-void FlightControllerWrapper::execute_land(const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::Land>> goal_handle)
+void FlightControllerWrapper::execute_land(const std::shared_ptr<rclcpp_action::ServerGoalHandle<psdk_interfaces::action::Land>> goal_handle)
 {
     log_info(node_, "Landing...");
 
-    auto result = std::make_shared<payload_sdk_ros2_interfaces::action::Land::Result>();
+    auto result = std::make_shared<psdk_interfaces::action::Land::Result>();
 
     if (!DjiTest_FlightControlMonitoredLanding()) {
         log_error(node_, "Land failed");
@@ -158,7 +158,7 @@ void FlightControllerWrapper::execute_land(const std::shared_ptr<rclcpp_action::
     }
 }
 
-void FlightControllerWrapper::execute_move_to_position(const std::shared_ptr<rclcpp_action::ServerGoalHandle<payload_sdk_ros2_interfaces::action::MoveToPosition>> goal_handle)
+void FlightControllerWrapper::execute_move_to_position(const std::shared_ptr<rclcpp_action::ServerGoalHandle<psdk_interfaces::action::MoveToPosition>> goal_handle)
 {
     auto goal = goal_handle->get_goal();
     float x = goal->x;
@@ -168,7 +168,7 @@ void FlightControllerWrapper::execute_move_to_position(const std::shared_ptr<rcl
     std::stringstream ss;
     ss << "Moving to position: x=" << x << ", y=" << y << ", z=" << z << ", yaw=" << yaw;
     log_info(node_, ss.str().c_str());
-    auto result = std::make_shared<payload_sdk_ros2_interfaces::action::MoveToPosition::Result>();
+    auto result = std::make_shared<psdk_interfaces::action::MoveToPosition::Result>();
 
     auto timeout_duration = std::chrono::seconds(goal->timeout);
     auto future = std::async(std::launch::async, [this, x, y, z, yaw]() {
@@ -206,8 +206,8 @@ void FlightControllerWrapper::execute_move_to_position(const std::shared_ptr<rcl
     }
 }
 
-void FlightControllerWrapper::handle_obtain_joystick_authority(const std::shared_ptr<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority::Request> request,
-                                                               std::shared_ptr<payload_sdk_ros2_interfaces::srv::ObtainJoystickAuthority::Response> response)
+void FlightControllerWrapper::handle_obtain_joystick_authority(const std::shared_ptr<psdk_interfaces::srv::ObtainJoystickAuthority::Request> request,
+                                                               std::shared_ptr<psdk_interfaces::srv::ObtainJoystickAuthority::Response> response)
 {
     T_DjiReturnCode returnCode = DjiFlightController_ObtainJoystickCtrlAuthority();
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
@@ -219,8 +219,8 @@ void FlightControllerWrapper::handle_obtain_joystick_authority(const std::shared
     }
 }
 
-void FlightControllerWrapper::handle_release_joystick_authority(const std::shared_ptr<payload_sdk_ros2_interfaces::srv::ReleaseJoystickAuthority::Request> request,
-                                                                std::shared_ptr<payload_sdk_ros2_interfaces::srv::ReleaseJoystickAuthority::Response> response)
+void FlightControllerWrapper::handle_release_joystick_authority(const std::shared_ptr<psdk_interfaces::srv::ReleaseJoystickAuthority::Request> request,
+                                                                std::shared_ptr<psdk_interfaces::srv::ReleaseJoystickAuthority::Response> response)
 {
     T_DjiReturnCode returnCode = DjiFlightController_ReleaseJoystickCtrlAuthority();
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
@@ -232,8 +232,8 @@ void FlightControllerWrapper::handle_release_joystick_authority(const std::share
     }
 }
 
-void FlightControllerWrapper::handle_set_joystick_mode(const std::shared_ptr<payload_sdk_ros2_interfaces::srv::SetJoystickMode::Request> request,
-                                                       std::shared_ptr<payload_sdk_ros2_interfaces::srv::SetJoystickMode::Response> response)
+void FlightControllerWrapper::handle_set_joystick_mode(const std::shared_ptr<psdk_interfaces::srv::SetJoystickMode::Request> request,
+                                                       std::shared_ptr<psdk_interfaces::srv::SetJoystickMode::Response> response)
 {
     T_DjiFlightControllerJoystickMode joystickMode = {
         static_cast<E_DjiFlightControllerHorizontalControlMode>(request->horizontal_control_mode),
@@ -247,7 +247,7 @@ void FlightControllerWrapper::handle_set_joystick_mode(const std::shared_ptr<pay
     response->is_success = true;
 }
 
-void FlightControllerWrapper::joystick_command_callback(const payload_sdk_ros2_interfaces::msg::JoystickCommand::SharedPtr msg)
+void FlightControllerWrapper::joystick_command_callback(const psdk_interfaces::msg::JoystickCommand::SharedPtr msg)
 {
     T_DjiFlightControllerJoystickCommand joystickCommand = {
         msg->x,
@@ -258,7 +258,7 @@ void FlightControllerWrapper::joystick_command_callback(const payload_sdk_ros2_i
     DjiFlightController_ExecuteJoystickAction(joystickCommand);
 }
 
-void FlightControllerWrapper::velocity_command_callback(const payload_sdk_ros2_interfaces::msg::VelocityCommand::SharedPtr msg)
+void FlightControllerWrapper::velocity_command_callback(const psdk_interfaces::msg::VelocityCommand::SharedPtr msg)
 {
     float x = msg->x;   // m/s
     float y = msg->y;   // m/s

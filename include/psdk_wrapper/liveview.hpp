@@ -12,8 +12,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <module_sample_c/utils/util_misc.h>
 
-#include <payload_sdk_ros2_interfaces/srv/enable_recording.hpp>
-#include <payload_sdk_ros2/utils.h>
+#include <psdk_interfaces/srv/enable_recording.hpp>
+#include <psdk_wrapper/utils.h>
 
 class LiveViewWrapper
 {
@@ -24,7 +24,7 @@ public:
 private:
     std::shared_ptr<rclcpp::Node> node_;
     image_transport::Publisher image_pub_;
-    rclcpp::Service<payload_sdk_ros2_interfaces::srv::EnableRecording>::SharedPtr enable_recording_srv_;
+    rclcpp::Service<psdk_interfaces::srv::EnableRecording>::SharedPtr enable_recording_srv_;
 
     int camera_index_;
     std::string mp4_output_folder_;
@@ -38,7 +38,7 @@ private:
     void publishImage(cv::Mat &mat);
     void startCameraStream();
     void stopCameraStream();
-    void enableRecordingCallback(const std::shared_ptr<payload_sdk_ros2_interfaces::srv::EnableRecording::Request> request, std::shared_ptr<payload_sdk_ros2_interfaces::srv::EnableRecording::Response> response);
+    void enableRecordingCallback(const std::shared_ptr<psdk_interfaces::srv::EnableRecording::Request> request, std::shared_ptr<psdk_interfaces::srv::EnableRecording::Response> response);
 
     LiveviewSample *liveviewSample;
 };

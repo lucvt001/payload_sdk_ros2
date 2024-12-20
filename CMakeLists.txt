@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(payload_sdk_ros2)
+project(psdk_wrapper)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -w)
@@ -19,7 +19,7 @@ find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(OpenCV REQUIRED)
 
-find_package(payload_sdk_ros2_interfaces REQUIRED)
+find_package(psdk_interfaces REQUIRED)
 
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -101,7 +101,7 @@ include_directories(
   ${FFMPEG_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
   include
-  include/payload_sdk_ros2
+  include/psdk_wrapper
   include/common
   include/hal
   include/module_sample_cpp
@@ -119,7 +119,7 @@ set(ros_dependencies
   nav_msgs
   cv_bridge
   image_transport
-  payload_sdk_ros2_interfaces
+  psdk_interfaces
 )
 
 add_executable(psdk_wrapper_node
@@ -180,7 +180,7 @@ install(TARGETS
 install(DIRECTORY 
   include/
   ${CMAKE_CURRENT_SOURCE_DIR}/psdk_lib/include/
-  include/payload_sdk_ros2
+  include/psdk_wrapper
   include/common
   include/hal
   include/module_sample_cpp

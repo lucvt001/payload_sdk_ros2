@@ -1,9 +1,13 @@
-#include <payload_sdk_ros2/psdk_wrapper_node.hpp>
+#include <psdk_wrapper/psdk_wrapper_node.hpp>
 #include <cstring>
 
 PSDKWrapper::PSDKWrapper() : Node("psdk_wrapper_node")
 {
-    // Placeholder for now
+    this->declare_parameter<bool>("liveview.is_enable", false);
+    this->declare_parameter<bool>("flight_control.is_enable", true);
+
+    this->get_parameter("liveview.is_enable", is_enable_liveview_);
+    this->get_parameter("flight_control.is_enable", is_enable_flight_control_);
 }
 
 void PSDKWrapper::initialize()

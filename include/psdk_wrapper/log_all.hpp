@@ -2,7 +2,7 @@
 #define LOG_ALL_HPP
 
 #include <rclcpp/rclcpp.hpp>
-#include "module_sample_c/widget/test_widget.h"
+#include <module_sample_c/widget/test_widget.h>
 
 inline void log_info(const std::shared_ptr<rclcpp::Node>& node, const std::string& text)
 {
